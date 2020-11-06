@@ -56,9 +56,8 @@ fn main() -> Result<()> {
     let stdin = io::stdin();
     let mut stdout = io::stdout();
 
-    let mut line = String::new();
-
     loop {
+        let mut line = String::new();
         let mut n = stdin.read_line(&mut line)?;
 
         if n == 0 {
@@ -81,9 +80,9 @@ fn main() -> Result<()> {
                 break;
             }
 
-            refs.insert(Cow::Owned(slice.to_owned()));
+            line.pop();
+            refs.insert(Cow::Owned(line));
         }
-        line.clear();
     }
 
     Ok(())
