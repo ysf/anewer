@@ -3,7 +3,7 @@ use std::borrow::Cow;
 use std::collections::HashSet;
 use std::fs;
 use std::fs::OpenOptions;
-use std::io::{self, BufRead, Write};
+use std::io::{self, Write};
 use std::path::PathBuf;
 use structopt::clap::AppSettings;
 use structopt::StructOpt;
@@ -43,7 +43,8 @@ fn main() -> Result<()> {
                 .create(true)
                 .write(true)
                 .append(true)
-                .open(filename)?;
+                .open(filename)
+                .context("Could not create/write/open file")?;
             if !has_newline {
                 file2.write_all(b"\n")?;
             }
@@ -53,23 +54,36 @@ fn main() -> Result<()> {
     }
 
     let stdin = io::stdin();
+    let mut stdout = io::stdout();
 
-    for line in stdin.lock().lines() {
-        let line = line?;
+    let mut line = String::new();
 
-        if refs.contains(line.as_str()) {
-            continue;
+    loop {
+        let mut n = stdin.read_line(&mut line)?;
+
+        if n == 0 {
+            break;
         }
 
-        if let Some(file) = &mut file {
-            file.write_all(&format!("{}\n", line).as_bytes())?;
+        if !line.ends_with('\n') {
+            n += 1;
+            line.push('\n')
         }
 
-        if !args.quiet {
-            println!("{}", line);
-        }
+        let slice = &line[..n - 1];
+        if !refs.contains(slice) {
+            if let Some(file) = &mut file {
+                file.write_all(line.as_bytes())
+                    .context("Could not write to file")?;
+            }
 
-        refs.insert(Cow::Owned(line));
+            if !args.quiet && stdout.write_all(line.as_bytes()).is_err() {
+                break;
+            }
+
+            refs.insert(Cow::Owned(slice.to_owned()));
+        }
+        line.clear();
     }
 
     Ok(())
