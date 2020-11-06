@@ -12,7 +12,7 @@ use structopt::StructOpt;
 #[derive(Debug, StructOpt)]
 #[structopt(global_settings = &[AppSettings::ColoredHelp])]
 struct Args {
-    ///
+    /// path to file, will be created if needed
     filename: Option<PathBuf>,
 
     /// Quiet, won't print to stdout.
