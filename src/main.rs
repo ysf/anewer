@@ -1,9 +1,10 @@
 use anyhow::{anyhow, Context, Result};
+use memchr::memchr;
 use std::borrow::Cow;
 use std::collections::HashSet;
 use std::fs;
 use std::fs::OpenOptions;
-use std::io::{self, Write};
+use std::io::{self, BufRead, Write};
 use std::path::PathBuf;
 use structopt::clap::AppSettings;
 use structopt::StructOpt;
@@ -31,12 +32,23 @@ fn main() -> Result<()> {
     let mut refs = HashSet::new();
 
     if let Some(filename) = args.filename {
-        content = fs::read_to_string(&filename)
-            .with_context(|| anyhow!("Failed to open file: {:?}", filename))?;
+        content =
+            fs::read(&filename).with_context(|| anyhow!("Failed to open file: {:?}", filename))?;
 
-        let has_newline = content.ends_with('\n');
+        let has_newline = !content.is_empty() && content[content.len() - 1] == b'\n';
 
-        refs.extend(content.split('\n').map(Cow::Borrowed));
+        let mut remaining = &content[..];
+        loop {
+            if let Some(idx) = memchr(b'\n', remaining) {
+                refs.insert(Cow::Borrowed(&remaining[..idx]));
+                remaining = &remaining[idx + 1..];
+            } else {
+                if !remaining.is_empty() {
+                    refs.insert(Cow::Borrowed(remaining));
+                }
+                break;
+            }
+        }
 
         if !args.dry_run {
             let mut file2 = OpenOptions::new()
@@ -54,29 +66,29 @@ fn main() -> Result<()> {
     }
 
     let stdin = io::stdin();
+    let mut stdin = stdin.lock();
     let mut stdout = io::stdout();
 
     loop {
-        let mut line = String::new();
-        let mut n = stdin.read_line(&mut line)?;
+        let mut line = Vec::new();
+        let mut n = stdin.read_until(b'\n', &mut line)?;
 
         if n == 0 {
             break;
         }
 
-        if !line.ends_with('\n') {
+        if !line[n - 1] == b'\n' {
             n += 1;
-            line.push('\n')
+            line.push(b'\n')
         }
 
         let slice = &line[..n - 1];
         if !refs.contains(slice) {
             if let Some(file) = &mut file {
-                file.write_all(line.as_bytes())
-                    .context("Could not write to file")?;
+                file.write_all(&line).context("Could not write to file")?;
             }
 
-            if !args.quiet && stdout.write_all(line.as_bytes()).is_err() {
+            if !args.quiet && stdout.write_all(&line).is_err() {
                 break;
             }
 

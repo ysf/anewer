@@ -9,4 +9,5 @@ edition = "2018"
 [dependencies]
 anyhow="1"
 structopt="0.3"
+memchr="2"
 
