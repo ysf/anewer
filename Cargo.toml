@@ -1,8 +1,19 @@
 [package]
-name = "anewer"
-version = "0.1.0"
-authors = ["ysf <ich@youssef.de>"]
 edition = "2018"
+name = "anewer"
+version = "0.1.2"
+authors = ["ysf <ich@youssef.de>"]
+description = "anewer appends lines from stdin to a file if they don't already exist in the file. You could also use it as `uniq` without `sort`."
+homepage = "https://github.com/ysf/anewer"
+repository = "https://github.com/ysf/anewer"
+categories = ["command-line-utilities"]
+keywords = ["cli", "io", "uniq"]
+readme = "README.md"
+license = "GPL-3.0-or-later"
+license-file = "LICENSE"
+exclude = [
+    "assets/*",
+]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -12,3 +23,7 @@ structopt="0.3"
 memchr="2"
 ahash = "0.5.6"
 
+[[bin]]
+name = "anewer"
+test = false
+bench = false
