@@ -11,6 +11,7 @@ use std::path::PathBuf;
 use structopt::clap::AppSettings;
 use structopt::StructOpt;
 
+// straight from huniq
 #[derive(Default)]
 struct IdentityHasher {
     off: u8,
@@ -29,7 +30,6 @@ impl Hasher for IdentityHasher {
     }
 }
 
-/// Hash the given value with the given BuildHasher. Now.
 fn hash<T: BuildHasher, U: std::hash::Hash + ?Sized>(build: &T, v: &U) -> u64 {
     let mut s = build.build_hasher();
     v.hash(&mut s);
