@@ -1,13 +1,40 @@
+use ahash::RandomState as ARandomState;
 use anyhow::{anyhow, Context, Result};
 use memchr::memchr;
-use std::borrow::Cow;
 use std::collections::HashSet;
 use std::fs;
 use std::fs::OpenOptions;
+use std::hash::BuildHasherDefault;
+use std::hash::{BuildHasher, Hasher};
 use std::io::{self, BufRead, Write};
 use std::path::PathBuf;
 use structopt::clap::AppSettings;
 use structopt::StructOpt;
+
+#[derive(Default)]
+struct IdentityHasher {
+    off: u8,
+    buf: [u8; 8],
+}
+
+impl Hasher for IdentityHasher {
+    fn write(&mut self, bytes: &[u8]) {
+        self.off += (&mut self.buf[self.off as usize..])
+            .write(bytes)
+            .unwrap_or(0) as u8;
+    }
+
+    fn finish(&self) -> u64 {
+        u64::from_ne_bytes(self.buf)
+    }
+}
+
+/// Hash the given value with the given BuildHasher. Now.
+fn hash<T: BuildHasher, U: std::hash::Hash + ?Sized>(build: &T, v: &U) -> u64 {
+    let mut s = build.build_hasher();
+    v.hash(&mut s);
+    s.finish()
+}
 
 /// Appends lines from stdin to a file, if they don't already exist in the file.
 #[derive(Debug, StructOpt)]
@@ -29,7 +56,8 @@ fn main() -> Result<()> {
     let content;
     let args = Args::from_args();
     let mut file = None;
-    let mut refs = HashSet::new();
+    let hasher = ARandomState::new();
+    let mut set = HashSet::<u64, BuildHasherDefault<IdentityHasher>>::default();
 
     if let Some(filename) = args.filename {
         content =
@@ -40,11 +68,11 @@ fn main() -> Result<()> {
         let mut remaining = &content[..];
         loop {
             if let Some(idx) = memchr(b'\n', remaining) {
-                refs.insert(Cow::Borrowed(&remaining[..idx]));
+                set.insert(hash(&hasher, &remaining[..idx]));
                 remaining = &remaining[idx + 1..];
             } else {
                 if !remaining.is_empty() {
-                    refs.insert(Cow::Borrowed(remaining));
+                    set.insert(hash(&hasher, &remaining));
                 }
                 break;
             }
@@ -82,18 +110,14 @@ fn main() -> Result<()> {
             line.push(b'\n')
         }
 
-        let slice = &line[..n - 1];
-        if !refs.contains(slice) {
+        if set.insert(hash(&hasher, &line[..n - 1])) {
             if let Some(file) = &mut file {
                 file.write_all(&line).context("Could not write to file")?;
             }
 
-            if !args.quiet && stdout.write_all(&line).is_err() {
-                break;
+            if !args.quiet {
+                stdout.write_all(&line)?;
             }
-
-            line.pop();
-            refs.insert(Cow::Owned(line));
         }
     }
 

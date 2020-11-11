@@ -10,4 +10,5 @@ edition = "2018"
 anyhow="1"
 structopt="0.3"
 memchr="2"
+ahash = "0.5.6"
 
