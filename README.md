@@ -1,4 +1,4 @@
-# anewer [![@ysfr][twitter-img]][twitter]
+# anewer [![crates.io][crates-img]][crates] [![@ysfr][twitter-img]][twitter]
 anewer appends lines from stdin to a file if they don't already exist in the file. You could also use it as `uniq` without `sort`. This is a rust version of [tomnomnom/anew](https://github.com/tomnomnom/anew). It makes use of [tkaitchuck/aHash](https://github.com/tkaitchuck/aHash) to cut down runtime to ~50%. Since only hashed lines are held in memory, it cuts down memory usage for inputs with long lines. Which is similar how [`huniq`](https://crates.io/crates/huniq) works.
 
 [twitter-img]:  https://img.shields.io/badge/twitter-@ysfr-blue.svg
