@@ -8,7 +8,7 @@ anewer appends lines from stdin to a file if they don't already exist in the fil
 ## Usage
 
 ```
-$ anewer
+$ anewer -h
 USAGE:
     anewer [FLAGS] [filename]
 
