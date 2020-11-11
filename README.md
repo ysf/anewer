@@ -3,7 +3,8 @@ anewer appends lines from stdin to a file if they don't already exist in the fil
 
 [twitter-img]:  https://img.shields.io/badge/twitter-@ysfr-blue.svg
 [twitter]:      https://twitter.com/ysfr
-
+[crates-img]:   https://img.shields.io/crates/v/anewer.svg
+[crates]:       https://crates.io/crates/anewer
 
 ## Usage
 
