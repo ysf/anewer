@@ -116,7 +116,9 @@ fn main() -> Result<()> {
             }
 
             if !args.quiet {
-                stdout.write_all(&line)?;
+                if stdout.write_all(&line).is_err() {
+                    break;
+                }
             }
         }
     }
