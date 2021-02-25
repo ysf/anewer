@@ -16,6 +16,7 @@ USAGE:
 FLAGS:
     -n, --dry-run    Dry run, will leave the file as it is
     -h, --help       Prints help information
+    -v, --invert     Invert the sense of matching
     -q, --quiet      Quiet, won't print to stdout
     -V, --version    Prints version information
 
