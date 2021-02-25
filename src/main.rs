@@ -50,6 +50,10 @@ struct Args {
     /// Dry run, will leave the file as it is.
     #[structopt(short = "n", long)]
     dry_run: bool,
+
+    /// Invert the sense of matching
+    #[structopt(short = "v", long)]
+    invert: bool,
 }
 
 fn main() -> Result<()> {
@@ -110,7 +114,9 @@ fn main() -> Result<()> {
             line.push(b'\n')
         }
 
-        if set.insert(hash(&hasher, &line[..n - 1])) {
+        let known_line = set.insert(hash(&hasher, &line[..n - 1]));
+
+        if (!args.invert && known_line) || (args.invert && !known_line) {
             if let Some(file) = &mut file {
                 file.write_all(&line).context("Could not write to file")?;
             }

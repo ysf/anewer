@@ -12,7 +12,7 @@ dependencies = [
 
 [[package]]
 name = "anewer"
-version = "0.1.2"
+version = "0.1.4"
 dependencies = [
  "ahash",
  "anyhow",
