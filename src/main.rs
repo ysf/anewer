@@ -57,28 +57,31 @@ struct Args {
 }
 
 fn main() -> Result<()> {
-    let content;
     let args = Args::from_args();
     let mut file = None;
     let hasher = ARandomState::new();
     let mut set = HashSet::<u64, BuildHasherDefault<IdentityHasher>>::default();
 
     if let Some(filename) = args.filename {
-        content =
-            fs::read(&filename).with_context(|| anyhow!("Failed to open file: {:?}", filename))?;
+        let mut has_newline = true;
 
-        let has_newline = !content.is_empty() && content[content.len() - 1] == b'\n';
+        if filename.exists() {
+            let content = fs::read(&filename)
+                .with_context(|| anyhow!("Failed to open file: {:?}", filename))?;
 
-        let mut remaining = &content[..];
-        loop {
-            if let Some(idx) = memchr(b'\n', remaining) {
-                set.insert(hash(&hasher, &remaining[..idx]));
-                remaining = &remaining[idx + 1..];
-            } else {
-                if !remaining.is_empty() {
-                    set.insert(hash(&hasher, &remaining));
+            has_newline = !content.is_empty() && content[content.len() - 1] == b'\n';
+
+            let mut remaining = &content[..];
+            loop {
+                if let Some(idx) = memchr(b'\n', remaining) {
+                    set.insert(hash(&hasher, &remaining[..idx]));
+                    remaining = &remaining[idx + 1..];
+                } else {
+                    if !remaining.is_empty() {
+                        set.insert(hash(&hasher, &remaining));
+                    }
+                    break;
                 }
-                break;
             }
         }
 
