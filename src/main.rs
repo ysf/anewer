@@ -69,7 +69,7 @@ fn main() -> Result<()> {
             let content = fs::read(&filename)
                 .with_context(|| anyhow!("Failed to open file: {:?}", filename))?;
 
-            has_newline = !content.is_empty() && content[content.len() - 1] == b'\n';
+            has_newline = content.is_empty() || content[content.len() - 1] == b'\n';
 
             let mut remaining = &content[..];
             loop {
