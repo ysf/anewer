@@ -1,7 +1,7 @@
 [package]
 edition = "2018"
 name = "anewer"
-version = "0.1.5"
+version = "0.1.6"
 authors = ["ysf <ich@youssef.de>"]
 description = "anewer appends lines from stdin to a file if they don't already exist in the file. You could also use it as `uniq` without `sort`."
 homepage = "https://github.com/ysf/anewer"
@@ -20,7 +20,7 @@ exclude = [
 anyhow="1"
 structopt="0.3"
 memchr="2"
-ahash = "0.5.6"
+ahash = "0.7"
 
 [[bin]]
 name = "anewer"
