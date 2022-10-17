@@ -1,12 +1,12 @@
 use ahash::RandomState as ARandomState;
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Error, Result};
 use memchr::memchr;
 use std::collections::HashSet;
 use std::fs;
 use std::fs::OpenOptions;
 use std::hash::BuildHasherDefault;
 use std::hash::{BuildHasher, Hasher};
-use std::io::{self, BufRead, Write};
+use std::io::{self, BufRead, ErrorKind, Write};
 use std::path::PathBuf;
 use structopt::clap::AppSettings;
 use structopt::StructOpt;
@@ -65,24 +65,31 @@ fn main() -> Result<()> {
     if let Some(filename) = args.filename {
         let mut has_newline = true;
 
-        if filename.exists() {
-            let content = fs::read(&filename)
-                .with_context(|| anyhow!("Failed to open file: {:?}", filename))?;
+        match fs::read(&filename) {
+            Ok(content) => {
+                has_newline = content.is_empty() || content[content.len() - 1] == b'\n';
 
-            has_newline = content.is_empty() || content[content.len() - 1] == b'\n';
-
-            let mut remaining = &content[..];
-            loop {
-                if let Some(idx) = memchr(b'\n', remaining) {
-                    set.insert(hash(&hasher, &remaining[..idx]));
-                    remaining = &remaining[idx + 1..];
-                } else {
-                    if !remaining.is_empty() {
-                        set.insert(hash(&hasher, &remaining));
+                let mut remaining = &content[..];
+                loop {
+                    if let Some(idx) = memchr(b'\n', remaining) {
+                        set.insert(hash(&hasher, &remaining[..idx]));
+                        remaining = &remaining[idx + 1..];
+                    } else {
+                        if !remaining.is_empty() {
+                            set.insert(hash(&hasher, &remaining));
+                        }
+                        break;
                     }
-                    break;
                 }
             }
+            Err(error) => match error.kind() {
+                ErrorKind::NotFound => (),
+                _ => {
+                    return Err(
+                        Error::new(error).context(format!("Failed to read file: {:?}", filename))
+                    )
+                }
+            },
         }
 
         if !args.dry_run {
