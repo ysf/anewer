@@ -1,5 +1,6 @@
 use ahash::RandomState as ARandomState;
 use anyhow::{Context, Error, Result};
+use clap::Parser;
 use memchr::memchr;
 use std::collections::HashSet;
 use std::fs;
@@ -8,8 +9,6 @@ use std::hash::BuildHasherDefault;
 use std::hash::{BuildHasher, Hasher};
 use std::io::{self, BufRead, ErrorKind, Write};
 use std::path::PathBuf;
-use structopt::clap::AppSettings;
-use structopt::StructOpt;
 
 // straight from huniq
 #[derive(Default)]
@@ -37,27 +36,28 @@ fn hash<T: BuildHasher, U: std::hash::Hash + ?Sized>(build: &T, v: &U) -> u64 {
 }
 
 /// Appends lines from stdin to a file, if they don't already exist in the file.
-#[derive(Debug, StructOpt)]
-#[structopt(global_settings = &[AppSettings::ColoredHelp])]
+#[derive(Debug, Parser)]
+#[command(name = "anewer")]
+#[command(author, version, about)]
 struct Args {
     /// path to file, will be created if needed
     filename: Option<PathBuf>,
 
     /// Quiet, won't print to stdout.
-    #[structopt(short, long)]
+    #[arg(short, long)]
     quiet: bool,
 
     /// Dry run, will leave the file as it is.
-    #[structopt(short = "n", long)]
+    #[arg(short = 'n', long)]
     dry_run: bool,
 
     /// Invert the sense of matching
-    #[structopt(short = "v", long)]
+    #[arg(short = 'v', long)]
     invert: bool,
 }
 
 fn main() -> Result<()> {
-    let args = Args::from_args();
+    let args = Args::parse();
     let mut file = None;
     let hasher = ARandomState::new();
     let mut set = HashSet::<u64, BuildHasherDefault<IdentityHasher>>::default();

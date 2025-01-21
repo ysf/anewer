@@ -1,5 +1,5 @@
 [package]
-edition = "2018"
+edition = "2021"
 name = "anewer"
 version = "0.1.6"
 authors = ["ysf <ich@youssef.de>"]
@@ -17,10 +17,10 @@ exclude = [
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anyhow="1"
-structopt="0.3"
-memchr="2"
-ahash = "0.7"
+anyhow = "1.0"
+clap = { version = "4.4", features = ["derive"] }
+memchr = "2.6"
+ahash = "0.8"
 
 [[bin]]
 name = "anewer"
